@@ -3,7 +3,7 @@ from typing import Annotated
 
 import typer
 import yaml
-from hetzner.robot import Robot
+from hetznerinv.hetzner.robot import Robot
 
 from hetznerinv.config import config
 from hetznerinv.generate_inventory import gen_cloud, gen_robot, ssh_config

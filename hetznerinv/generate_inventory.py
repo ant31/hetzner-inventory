@@ -2,24 +2,13 @@ from ipaddress import IPv4Address
 
 import yaml
 from hcloud import Client
-from hetzner.robot import Robot
+
 from rich import print
 from rich.live import Live
 from rich.table import Table
 
 from hetznerinv.config import HetznerInventoryConfig
-
-# robot_web = RobotWebInterface(web, password)
-# robot_web.login()
-
-# s = servers[5]
-# r = s.rescue
-
-
-# Global variables like keys, product_options, cluster, regions, ignore_hosts,
-# no_privlink, cluster_subnets, cloudnames are removed and will be sourced
-# from the configuration object.
-
+from hetznerinv.hetzner.robot import Robot
 
 def hosts_by_id(hosts: list) -> dict:
     hid = {}

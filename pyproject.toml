@@ -6,16 +6,15 @@ authors = [{email="2t.antoine@gmail.com", name="ant31"}]
 license = {text="Apache-2.0"}
 readme = "README.md"
 
-requires-python = ">=3.12"
+requires-python = ">=3.12,<4"
 dependencies = [
              "pydantic",
              "typer[all]",
              "pyyaml",
              "typing-extensions",
              "pyyaml",
-             "ant31box @ git+https://github.com/ant31/ant31box@main",
+             "ant31box (>=0.2.3)",
              "click (<8.2.0)",
-             "hetzner @ git+https://github.com/ant31/hetzner@master",
              "hcloud (>=2.5.1,<3.0.0)",
              "rich (>=14.0.0,<15.0.0)"
              ]

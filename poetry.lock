@@ -219,13 +219,15 @@ files = [
 
 [[package]]
 name = "ant31box"
-version = "0.2.2"
+version = "0.2.3"
 description = ""
 optional = false
-python-versions = ">=3.11"
+python-versions = "<4,>=3.12"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "ant31box-0.2.3-py3-none-any.whl", hash = "sha256:60cd8b95a9b380971566e68e0afb38f620b824a003a5ddf2f81a5859a9b4e1da"},
+    {file = "ant31box-0.2.3.tar.gz", hash = "sha256:534fdfc064faade3c9ea5ac20327b1c6af7c6d7d5a2ef9633bab1caa692c4ae9"},
+]
 
 [package.dependencies]
 aiofiles = "*"
@@ -246,13 +248,6 @@ typing-extensions = "*"
 click = ["click"]
 fastapi = ["fastapi[all]", "starlette-exporter"]
 s3 = ["boto3"]
-sentry = []
-
-[package.source]
-type = "git"
-url = "https://github.com/ant31/ant31box"
-reference = "main"
-resolved_reference = "d3011563de7454bb9260f11546da44b5fe7613e5"
 
 [[package]]
 name = "anyio"
@@ -1208,22 +1203,6 @@ requests = ">=2.20"
 [package.extras]
 docs = ["myst-parser (>=4,<4.1)", "sphinx (>=8,<8.3)", "sphinx-rtd-theme (>=3,<3.1)", "watchdog (>=6,<6.1)"]
 test = ["coverage (>=7.8,<7.9)", "mypy (>=1.15,<1.16)", "pylint (>=3,<3.4)", "pytest (>=8,<8.4)", "pytest-cov (>=6,<6.2)", "types-python-dateutil", "types-requests"]
-
-[[package]]
-name = "hetzner"
-version = "0.8.3"
-description = "High level access to the Hetzner robot"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = []
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/ant31/hetzner"
-reference = "master"
-resolved_reference = "4ad5e1425c594a315c15ef123112ed8dc3c56ae6"
 
 [[package]]
 name = "httpcore"
@@ -2273,14 +2252,14 @@ testutils = ["gitpython (>3)"]
 
 [[package]]
 name = "pylint-plugin-utils"
-version = "0.7"
+version = "0.8.2"
 description = "Utilities and helpers for writing Pylint plugins"
 optional = false
-python-versions = ">=3.6.2"
+python-versions = ">=3.7,<4.0"
 groups = ["dev"]
 files = [
-    {file = "pylint-plugin-utils-0.7.tar.gz", hash = "sha256:ce48bc0516ae9415dd5c752c940dfe601b18fe0f48aa249f2386adfa95a004dd"},
-    {file = "pylint_plugin_utils-0.7-py3-none-any.whl", hash = "sha256:b3d43e85ab74c4f48bb46ae4ce771e39c3a20f8b3d56982ab17aa73b4f98d535"},
+    {file = "pylint_plugin_utils-0.8.2-py3-none-any.whl", hash = "sha256:ae11664737aa2effbf26f973a9e0b6779ab7106ec0adc5fe104b0907ca04e507"},
+    {file = "pylint_plugin_utils-0.8.2.tar.gz", hash = "sha256:d3cebf68a38ba3fba23a873809155562571386d4c1b03e5b4c4cc26c3eee93e4"},
 ]
 
 [package.dependencies]
@@ -3062,5 +3041,5 @@ propcache = ">=0.2.1"
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.12"
-content-hash = "c26df903140e1a0416b741e189e80acb75f13b44a745b4b6de456860835b0da6"
+python-versions = ">=3.12,<4"
+content-hash = "42f372d7eaf4af6c13a6ace73d39548cbb245ac079a05e3a785b4b24b4bf6039"
