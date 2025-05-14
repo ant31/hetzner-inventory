@@ -15,12 +15,12 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
-from hetzner import WebRobotError, RobotError
-from hetzner.server import Server
-from hetzner.rdns import ReverseDNSManager
-from hetzner.failover import FailoverManager
-from hetzner.vswitch import VswitchManager
-from hetzner.util.http import ValidatedHTTPSConnection
+from . import WebRobotError, RobotError
+from .server import Server
+from .rdns import ReverseDNSManager
+from .failover import FailoverManager
+from .vswitch import VswitchManager
+from .util.http import ValidatedHTTPSConnection
 
 ROBOT_HOST = "robot-ws.your-server.de"
 ROBOT_WEBHOST = "robot.hetzner.com"

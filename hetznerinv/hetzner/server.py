@@ -15,10 +15,10 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
-from hetzner import RobotError, WebRobotError
-from hetzner.rdns import ReverseDNS, ReverseDNSManager
-from hetzner.reset import Reset
-from hetzner.util import addr, scraping
+from . import RobotError, WebRobotError
+from .rdns import ReverseDNS, ReverseDNSManager
+from .reset import Reset
+from .util import addr, scraping
 
 __all__ = ['AdminAccount', 'IpAddress', 'RescueSystem', 'Server', 'Subnet',
            'IpManager', 'SubnetManager']

@@ -2,7 +2,7 @@ import unittest
 import struct
 import socket
 
-from hetzner.util.addr import (parse_ipv4, parse_ipv6, parse_ipaddr,
+from .util.addr import (parse_ipv4, parse_ipv6, parse_ipaddr,
                                get_ipv4_range, get_ipv6_range,
                                ipv4_bin2addr, ipv6_bin2addr)
 

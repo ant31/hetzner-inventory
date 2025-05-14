@@ -3,7 +3,7 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
-from hetzner import RobotError
+from . import RobotError
 
 __all__ = ['ReverseDNS', 'ReverseDNSManager']
 

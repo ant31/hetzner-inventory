@@ -1,6 +1,6 @@
 [project]
 name = "hetznerinv"
-version = "0.2.2"
+version = "0.2.3"
 description = ""
 authors = [{email="2t.antoine@gmail.com", name="ant31"}]
 license = {text="Apache-2.0"}
@@ -65,7 +65,7 @@ asyncio_default_fixture_loop_scope = "session"
 
 
 [tool.bumpversion]
-current_version = "0.2.2"
+current_version = "0.2.3"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"

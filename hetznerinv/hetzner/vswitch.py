@@ -1,4 +1,4 @@
-from hetzner import RobotError
+from . import RobotError
 
 __all__ = ['Failover', 'FailoverManager']
 

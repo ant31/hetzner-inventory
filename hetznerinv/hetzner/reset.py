@@ -1,7 +1,7 @@
 import socket
 import time
 
-from hetzner import ConnectError, ManualReboot
+from . import ConnectError, ManualReboot
 
 
 class Reset(object):
