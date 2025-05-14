@@ -1,6 +1,7 @@
+from typer.testing import CliRunner
+
 from hetznerinv import __version__
 from hetznerinv.cli import app
-from typer.testing import CliRunner
 
 runner = CliRunner()
 
@@ -66,7 +67,7 @@ hetzner:
     assert result.exit_code == 0
     assert "cluster_prefix: custom_prefix" in result.stdout
     assert "name: hetznerinv" in result.stdout # Default name still present
-    assert "domain_name: revlyt.dev" in result.stdout # Default from schema
+    assert "domain_name: mydom.dev" in result.stdout # Default from schema
 
 
 def test_generate_command_help():

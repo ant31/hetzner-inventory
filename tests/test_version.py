@@ -1,4 +1,5 @@
 from ant31box.version import Version as Ant31boxVersion
+
 from hetznerinv import __version__ as package_version
 from hetznerinv.version import VERSION
 

@@ -368,11 +368,11 @@ def gen_cloud(
         # name=name, group=group, dc=dc, domain_name=hetzner_config.domain_name
         # )
 
-        pg = server.placement_group # pg is defined here
+        pg = server.placement_group  # pg is defined here
 
         # 1. Determine the name to be used for the host object and potentially for API update.
         # The 'name' variable at this point holds the generated/intended name from earlier logic.
-        name_for_host_object_and_api = name 
+        name_for_host_object_and_api = name
         if not hetzner_config.update_server_names_in_cloud:
             # If not updating the name in the cloud, the inventory should reflect the actual server name.
             name_for_host_object_and_api = server.name
@@ -383,30 +383,30 @@ def gen_cloud(
         generated_labels_component = {"group": group}
         if pg:
             generated_labels_component.update(pg.labels)
-        if name in k8s_groups: # 'name' is the generated/intended name
+        if name in k8s_groups:  # 'name' is the generated/intended name
             generated_labels_component.update(k8s_groups[name])
 
         # 3. Determine the final set of labels for the host object and for API update.
         # Start with a copy of the server's current labels from the API.
         final_labels_for_host_and_api = server.labels.copy()
-        
+
         if hetzner_config.update_server_labels_in_cloud:
             # If updating labels in the cloud, merge the generated labels into the current ones.
             # Generated labels will overwrite existing ones if keys conflict.
             final_labels_for_host_and_api.update(generated_labels_component)
         # If not updating labels in the cloud, final_labels_for_host_and_api remains a copy of server.labels.
         # This ensures the host object in the inventory reflects the actual labels on the server.
-        
+
         # 4. Prepare arguments for the API update call.
         update_args = {}
         if hetzner_config.update_server_names_in_cloud:
             # API name update uses the script-generated 'name' (held in 'name' variable at the start of this block).
-            update_args["name"] = name 
-        
+            update_args["name"] = name
+
         if hetzner_config.update_server_labels_in_cloud:
             # API labels update uses the merged set.
             update_args["labels"] = final_labels_for_host_and_api
-            
+
         # 5. Perform the API update if there are any changes to make.
         if update_args:
             server.update(**update_args)
@@ -414,31 +414,31 @@ def gen_cloud(
         # 6. Construct the host object using the determined names and labels.
         # The hostname (FQDN) should be based on the name that will be used in the inventory.
         hostname_generated = hetzner_config.hostname_format.format(
-            name=name_for_host_object_and_api, # This is the name appearing in the inventory
-            group=group, 
-            dc=dc, 
-            domain_name=hetzner_config.domain_name
+            name=name_for_host_object_and_api,  # This is the name appearing in the inventory
+            group=group,
+            dc=dc,
+            domain_name=hetzner_config.domain_name,
         )
 
         host = {
-            "name": name_for_host_object_and_api, # Name for inventory key and ansible
+            "name": name_for_host_object_and_api,  # Name for inventory key and ansible
             "ip": priv_ip,
             "ip_vlan": priv_ip,
             "ansible_ssh_host": ipv4,
-            "hostname": hostname_generated, # Generated FQDN
+            "hostname": hostname_generated,  # Generated FQDN
             "model": product,
             "protected": True,
             "region": region,
             "zone": zone,
             "server_info": {
-                "labels": final_labels_for_host_and_api, # Final labels for inventory
+                "labels": final_labels_for_host_and_api,  # Final labels for inventory
                 "dc": dc,
                 "id": number,
                 "group": group,
                 "hetzner": {
                     "options": "",
                     "public_ip": ipv4,
-                    "current_name": server.name, # Always store the actual current API name
+                    "current_name": server.name,  # Always store the actual current API name
                     "product": server.server_type.name.upper(),
                     "datacenter": server.datacenter.name.upper(),
                 },

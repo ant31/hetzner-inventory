@@ -3,9 +3,10 @@ from unittest import mock
 
 import pytest
 import yaml
+from typer.testing import CliRunner
+
 from hetznerinv import __version__ as package_version
 from hetznerinv.cli import app  # Main app to invoke subcommands
-from typer.testing import CliRunner
 
 runner = CliRunner()
 

@@ -96,8 +96,8 @@ def generate_main(
     robot_client = None
     if robot_user and robot_password:
         robot_client = Robot(robot_user, robot_password)
-    elif env == "production": # If production and still no client, means creds were missing and we should have exited.
-                              # This is a safeguard, but previous check should catch it.
+    elif env == "production":  # If production and still no client, means creds were missing and we should have exited.
+        # This is a safeguard, but previous check should catch it.
         typer.secho(
             "Error: Robot client could not be initialized for production due to missing credentials.",
             fg=typer.colors.RED,
@@ -142,7 +142,7 @@ def generate_main(
             fg=typer.colors.YELLOW,
             err=True,
         )
-        hosts_r = {} # Ensure it's reset on error
+        hosts_r = {}  # Ensure it's reset on error
 
     try:
         if hosts_c_path.exists():
@@ -163,8 +163,7 @@ def generate_main(
             fg=typer.colors.YELLOW,
             err=True,
         )
-        hosts_c = {} # Ensure it's reset on error
-
+        hosts_c = {}  # Ensure it's reset on error
 
     # Determine if any specific generation flags were set
     specific_generation_requested = generate_robot or generate_cloud or generate_ssh
@@ -188,7 +187,6 @@ def generate_main(
                 fg=typer.colors.YELLOW,
             )
 
-
     # Cloud inventory generation
     if generate_all_parts or generate_cloud:
         typer.echo("Generating Cloud inventory...")
@@ -201,9 +199,8 @@ def generate_main(
         typer.echo("Generating SSH configuration...")
         ssh_config(env, conf.hetzner)
         typer.secho("SSH configuration generation complete.", fg=typer.colors.GREEN)
-    elif specific_generation_requested and not generate_ssh: # Specific flags used, but not --gen-ssh
+    elif specific_generation_requested and not generate_ssh:  # Specific flags used, but not --gen-ssh
         typer.echo("Skipping SSH configuration: --gen-ssh was not specified.")
-
 
     if not (generate_all_parts or generate_robot or generate_cloud or generate_ssh):
         typer.echo("No generation tasks were performed based on the flags provided.")

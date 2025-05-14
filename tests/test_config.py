@@ -1,4 +1,5 @@
 import pytest
+
 from hetznerinv.config import Config, HetznerCredentials, config
 
 

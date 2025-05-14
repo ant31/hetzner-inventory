@@ -67,7 +67,9 @@ pylint:
 
 pyright:
 	poetry run pyright
+
 lint: format-test isort-check ruff poetry-check
+small-check: format-test isort-check poetry-check
 check: lint pyright
 
 pyre: pyre-check
