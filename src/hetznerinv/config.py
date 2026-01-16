@@ -22,6 +22,13 @@ ENVPREFIX = "HETZNER"
 # New sub-models for structured configuration
 
 
+class RobotCredentials(BaseConfig):
+    """Hetzner Robot user and password."""
+
+    user: str = Field(..., description="Hetzner Robot username.")
+    password: str = Field(..., description="Hetzner Robot password.")
+
+
 class HetznerCredentials(BaseConfig):
     """
     Hetzner Robot credentials
@@ -29,8 +36,18 @@ class HetznerCredentials(BaseConfig):
 
     #     model_config = SettingsConfigDict(env_prefix='HETZNER_'')
     # Hetzner Robot credentials
-    robot_user: str = Field(default="")
-    robot_password: str = Field(default="")
+    robot_user: str = Field(default="", description="Default Hetzner Robot username if not specified per environment.")
+    robot_password: str = Field(
+        default="", description="Default Hetzner Robot password if not specified per environment."
+    )
+
+    robot_credentials: dict[str, RobotCredentials] = Field(
+        default_factory=dict,
+        description=(
+            "Hetzner Robot credentials, keyed by environment name (e.g., 'staging': "
+            "{'user': '...', 'password': '...'})."
+        ),
+    )
 
     hcloud_token: str = Field(default="", description="Default Hetzner Cloud token if not specified per environment.")
     # Hetzner Cloud token
@@ -38,6 +55,19 @@ class HetznerCredentials(BaseConfig):
         default_factory=dict,
         description="Hetzner Cloud tokens, keyed by environment name (e.g., 'production': 'token').",
     )
+
+    def get_robot_credentials(self, env: str) -> tuple[str, str]:
+        """
+        Retrieves the Hetzner Robot credentials for the specified environment.
+
+        It first checks for environment-specific credentials.
+        If not found, it falls back to the general `robot_user` and `robot_password`.
+        Returns a tuple of (user, password).
+        """
+        if env in self.robot_credentials:
+            creds = self.robot_credentials[env]
+            return creds.user, creds.password
+        return self.robot_user, self.robot_password
 
     def get_hcloud_token(self, env: str) -> str | None:
         """

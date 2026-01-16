@@ -4,8 +4,14 @@
 
 # Uncomment and configure as needed:
 # hetzner_credentials:
-#   robot_user: "your_robot_user"
-#   robot_password: "your_robot_password"
+#   # Default Robot credentials, used if no environment-specific credentials are set.
+#   robot_user: "your_default_robot_user"
+#   robot_password: "your_default_robot_password"
+#   # Environment-specific Robot credentials.
+#   robot_credentials:
+#     staging:
+#       user: "your_staging_robot_user"
+#       password: "your_staging_robot_password"
 #   hcloud_token: "your_default_hcloud_token"
 #   hcloud_tokens:
 #     production: "your_production_token"

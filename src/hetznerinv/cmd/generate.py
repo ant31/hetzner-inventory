@@ -16,12 +16,11 @@ cmd_generate_app = typer.Typer(
 
 def _init_robot(conf: Config, env: str) -> Robot | None:
     """Init Robot client with creds validation"""
-    robot_user = conf.hetzner_credentials.robot_user
-    robot_password = conf.hetzner_credentials.robot_password
+    robot_user, robot_password = conf.hetzner_credentials.get_robot_credentials(env)
 
     if not robot_user or not robot_password:
         typer.secho(
-            "Error: Hetzner Robot credentials (user, password) not found in configuration.",
+            f"Error: Hetzner Robot credentials (user, password) not found for environment '{env}' in configuration.",
             fg=typer.colors.RED,
             err=True,
         )
