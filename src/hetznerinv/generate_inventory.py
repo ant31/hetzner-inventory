@@ -581,23 +581,20 @@ def gen_cloud(
         priv_ip = server.private_net[0].ip if server.private_net else None
         ipv4 = server.public_net.ipv4.ip
 
-        # Determine final name for inventory
-        name_for_inventory = name if hetzner_config.update_server_names_in_cloud else server.name
-
         # Prepare and update labels
         final_labels = _prep_cloud_labels(server, group, name, k8s_groups, hetzner_config)
         _update_cloud_server(server, name, final_labels, hetzner_config)
 
         # Create host entry
         host = _create_cloud_host_entry(
-            server, name_for_inventory, priv_ip, ipv4, product, final_labels, hetzner_config, hosts_init, force
+            server, name, priv_ip, ipv4, product, final_labels, hetzner_config, hosts_init, force
         )
 
         labels_str = ", ".join([f"{k}={v}" for k, v in final_labels.items()])
         table.add_row(
             str(i + 1),
             str(number),
-            name_for_inventory,
+            name,
             product,
             f"[pale_turquoise1]{ipv4}",
             host["ip"],
@@ -605,7 +602,7 @@ def gen_cloud(
             f"[pale_turquoise1]{labels_str}",
             f"[sea_green1]{region.upper()}[default] {dc}",
         )
-        hosts[name_for_inventory] = host
+        hosts[name] = host
 
     inventory = ansible_hosts(hosts, "hetzner_cloud")
     live.stop()
