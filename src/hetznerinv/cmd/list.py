@@ -201,7 +201,7 @@ def list_main(
                 robot_client, hetzner_conf, process_all_hosts=True
             )
             
-            for server_number, (server, server_env) in all_servers_with_env.items():
+            for _server_number, (server, server_env) in all_servers_with_env.items():
                 if server_env == current_env:
                     details = _get_robot_server_details(server, server_env, hetzner_conf, vswitch_map)
                     all_servers.append(details)
