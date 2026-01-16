@@ -40,8 +40,15 @@
 #     by_server_id:
 #       '1234567': "production-db"
 #
+#   # Default SSH user. Can be overridden per-environment or per-server.
+#   ssh_user: "kadmin"
+#   # Specific user for a server ID. This has the highest precedence.
+#   ssh_user_per_server_id:
+#     1234567: "root"
+#
 #   envs:
 #     staging:
 #       vlan_id: 4002
+#       ssh_user: "staging_user" # Overrides default 'kadmin' for all staging servers.
 #     development:
 #       vlan_id: 4003

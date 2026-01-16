@@ -18,6 +18,14 @@ def hosts_by_id(hosts: list) -> dict:
     return hid
 
 
+def _get_ssh_user(server_id: str | int, hetzner_config: HetznerInventoryConfig) -> str:
+    """Get SSH user for a server, checking per-server overrides first, then the default."""
+    server_id_str = str(server_id)
+    if server_id_str in hetzner_config.ssh_user_per_server_id:
+        return hetzner_config.ssh_user_per_server_id[server_id_str]
+    return hetzner_config.ssh_user
+
+
 def _get_servers_with_env(robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool) -> dict:
     """Get all servers with their assigned environment."""
     servers_with_env = {}
@@ -160,12 +168,14 @@ def _create_host_entry(
     hostname = hetzner_config.hostname_format.format(
         name=name, group=group, dc=dc, domain_name=hetzner_config.domain_name
     )
+    ssh_user = _get_ssh_user(server.number, hetzner_config)
 
     return {
         "name": name,
         "ip": priv_ip,
         "ip_vlan": vlan_ip,
         "ansible_ssh_host": server.ip,
+        "ansible_user": ssh_user,
         "hostname": hostname,
         "model": product + options,
         "protected": (server.name not in ["", "toReset"] and server.name is not None),
@@ -342,14 +352,14 @@ def _ssh_config(servers: dict, hetzner_config: HetznerInventoryConfig, name: str
                     hostname_alias,
                     s["hostname"],
                     s["ansible_ssh_host"],
-                    "kadmin",
+                    s["ansible_user"],
                     hetzner_config.ssh_identity_file,
                 )
                 template = f"""
 #{s["hostname"]}
 Host {hostname_alias}
     HostName {s["ansible_ssh_host"]}
-    User kadmin
+    User {s["ansible_user"]}
     IdentityFile {hetzner_config.ssh_identity_file}
 """
                 conf.append(template)
@@ -487,11 +497,14 @@ def _create_cloud_host_entry(
         name=name, group=group, dc=dc, domain_name=hetzner_config.domain_name
     )
 
+    ssh_user = _get_ssh_user(server.id, hetzner_config)
+
     host = {
         "name": name,
         "ip": priv_ip,
         "ip_vlan": priv_ip,
         "ansible_ssh_host": ipv4,
+        "ansible_user": ssh_user,
         "hostname": hostname,
         "model": product,
         "protected": True,

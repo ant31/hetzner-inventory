@@ -122,6 +122,7 @@ class EnvSettings(BaseConfig):
     """Environment-specific settings that override defaults."""
 
     vlan_id: str | None = Field(default=None, description="Environment-specific VLAN ID.")
+    ssh_user: str | None = Field(default=None, description="Environment-specific SSH user.")
 
 
 class HetznerInventoryConfig(BaseConfig):
@@ -188,6 +189,11 @@ class HetznerInventoryConfig(BaseConfig):
         default="~/.ssh/id_rsa",
         description="Path to the SSH identity file to be used in the generated SSH config.",
     )
+    ssh_user: str = Field(default="kadmin", description="Default SSH user for all servers.")
+    ssh_user_per_server_id: dict[str, str] = Field(
+        default_factory=dict,
+        description="Mapping of server ID to a specific SSH user, overriding environment and default settings.",
+    )
     vlan_id: str = Field(
         default="vlan4001",
         description=(
@@ -207,7 +213,9 @@ class HetznerInventoryConfig(BaseConfig):
         ),
     )
 
-    @field_validator("product_options", "cluster_subnets", "cloud_instance_names", "envs", mode="before")
+    @field_validator(
+        "product_options", "cluster_subnets", "cloud_instance_names", "envs", "ssh_user_per_server_id", mode="before"
+    )
     @classmethod
     def _coerce_dict_keys_to_str(cls, v: Any) -> Any:
         if isinstance(v, dict):
@@ -251,6 +259,8 @@ class Config(GenericConfig[HetznerConfigSchema]):
             env_settings = hetzner_config.envs[env]
             if env_settings.vlan_id is not None:
                 hetzner_config.vlan_id = env_settings.vlan_id
+            if env_settings.ssh_user is not None:
+                hetzner_config.ssh_user = env_settings.ssh_user
         return hetzner_config
 
 
