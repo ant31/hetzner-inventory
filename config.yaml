@@ -33,3 +33,9 @@
 #     # For example, server 1234567 will be 'production-db' even if it's on vSwitch 4567 and named 'dev-db-01'.
 #     by_server_id:
 #       '1234567': "production-db"
+#
+#   envs:
+#     staging:
+#       vlan_id: 4002
+#     development:
+#       vlan_id: 4003

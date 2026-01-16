@@ -18,11 +18,11 @@ def hosts_by_id(hosts: list) -> dict:
     return hid
 
 
-def _filter_servers(
-    robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool, env: str
+def _get_servers_with_env(
+    robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool
 ) -> dict:
-    """Filter servers based on ignore lists and environment."""
-    servers = {}
+    """Get all servers with their assigned environment."""
+    servers_with_env = {}
 
     # Build a map of server IP to vswitch ID for environment assignment
     vswitches = robot.vswitch.list()
@@ -63,11 +63,8 @@ def _filter_servers(
         if str(server.number) in assignment_rules.by_server_id:
             server_env = assignment_rules.by_server_id[str(server.number)]
 
-        if server_env != env:
-            continue  # Skip server if it doesn't match the target environment
-
-        servers[server.number] = server
-    return servers
+        servers_with_env[server.number] = (server, server_env)
+    return servers_with_env
 
 
 def _get_server_name(server, hids: dict, product: str, options: str) -> str:
@@ -190,6 +187,7 @@ def list_all_hosts(
     force=False,
     process_all_hosts: bool = False,
     env: str = "production",
+    verbose: bool = False,
 ):
     if hosts_init is None:
         hosts_init = {}
@@ -200,7 +198,25 @@ def list_all_hosts(
     privips = {}
     vlanips = {}
     
-    servers = _filter_servers(robot, hetzner_config, process_all_hosts, env=env)
+    all_servers_with_env = _get_servers_with_env(robot, hetzner_config, process_all_hosts)
+
+    if verbose:
+        verbose_table = Table(
+            highlight=True,
+            title="All Hetzner Robot servers found (before filtering)",
+            title_justify="left",
+            title_style="bold magenta",
+        )
+        verbose_table.add_column("ID", justify="left")
+        verbose_table.add_column("Name", justify="left")
+        verbose_table.add_column("Public IP", justify="left")
+        verbose_table.add_column("Product", justify="left")
+        verbose_table.add_column("Assigned Env", justify="left")
+        for server_number, (server, server_env) in sorted(all_servers_with_env.items()):
+            verbose_table.add_row(str(server_number), server.name, server.ip, server.product, server_env)
+        print(verbose_table)
+
+    servers = {num: s for num, (s, s_env) in all_servers_with_env.items() if s_env == env}
 
     table = Table(
         highlight=True,
@@ -343,10 +359,13 @@ def gen_robot(
     hosts_inv=None,
     env="production",
     process_all_hosts: bool = False,
+    verbose: bool = False,
 ):
     if hosts_inv is None:
         hosts_inv = {}
-    hosts = list_all_hosts(robot, hetzner_config, hosts_inv, process_all_hosts=process_all_hosts, env=env)
+    hosts = list_all_hosts(
+        robot, hetzner_config, hosts_inv, process_all_hosts=process_all_hosts, env=env, verbose=verbose
+    )
     inventory = ansible_hosts(hosts, "hetzner_robot")
     with open(f"inventory/{env}/hosts.yaml", "w") as f:
         f.write(yaml.dump(inventory))

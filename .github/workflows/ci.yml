@@ -24,32 +24,16 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
 
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-        installer-parallel: true
-
-    - name: Load cached venv
-      id: cached-poetry-dependencies
-      uses: actions/cache@v4
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+    - name: Install uv
+      uses: astral-sh/setup-uv@v1
 
     - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root
+      run: uv sync --locked --all-extras --dev
 
-    - name: Install project
-      run: poetry install --no-interaction
-
-    - name: Lint with Pylint
-      run: make small-check
+    - name: Lint
+      run: make check
 
     - name: Run tests with Pytest
       run: make test
-    - run: echo "$(poetry env info --path)/bin" >> $GITHUB_PATH
     - name: "Pyright"
       uses: jakebailey/pyright-action@v2

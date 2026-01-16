@@ -4,7 +4,7 @@ from typing import Any
 
 from ant31box.config import LOGGING_CONFIG as LG
 from ant31box.config import BaseConfig, GConfig, GenericConfig, LoggingConfigSchema
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 LOGGING_CONFIG: dict[str, Any] = LG
@@ -81,12 +81,29 @@ class RobotEnvAssignment(BaseConfig):
         ),
     )
 
+    @field_validator("by_vswitch", "by_server_id", mode="before")
+    @classmethod
+    def _coerce_dict_keys_to_str(cls, v: Any) -> Any:
+        if isinstance(v, dict):
+            return {str(key): value for key, value in v.items()}
+        return v
+
+
+class EnvSettings(BaseConfig):
+    """Environment-specific settings that override defaults."""
+
+    vlan_id: str | None = Field(default=None, description="Environment-specific VLAN ID.")
+
 
 class HetznerInventoryConfig(BaseConfig):
     """Configuration specific to Hetzner inventory generation."""
 
     robot_env_assignment: RobotEnvAssignment = Field(
         default_factory=RobotEnvAssignment, description="Rules for assigning Robot servers to environments."
+    )
+    envs: dict[str, EnvSettings] = Field(
+        default_factory=dict,
+        description="Environment-specific settings overrides, keyed by environment name.",
     )
     ssh_fingerprints: list[str] = Field(
         default_factory=list, description="List of SSH key fingerprints for server setup."
@@ -146,7 +163,7 @@ class HetznerInventoryConfig(BaseConfig):
         default="vlan4001",
         description=(
             "The VLAN ID (key in cluster_subnets) to use for IP allocation "
-            "when a server is not using its DC-specific privlink IP."
+            "when a server is not using its DC-specific privlink IP. Can be overridden per environment."
         ),
     )
     domain_name: str = Field(
@@ -160,6 +177,15 @@ class HetznerInventoryConfig(BaseConfig):
             "Available placeholders: {name}, {group}, {dc}, {domain_name}."
         ),
     )
+
+    @field_validator(
+        "product_options", "cluster_subnets", "cloud_instance_names", "envs", mode="before"
+    )
+    @classmethod
+    def _coerce_dict_keys_to_str(cls, v: Any) -> Any:
+        if isinstance(v, dict):
+            return {str(key): value for key, value in v.items()}
+        return v
 
 
 # Main configuration schema
@@ -188,6 +214,17 @@ class Config(GenericConfig[HetznerConfigSchema]):
     @property
     def hetzner(self) -> HetznerInventoryConfig:
         return self.conf.hetzner
+
+    def hetzner_for_env(self, env: str) -> HetznerInventoryConfig:
+        """
+        Returns a new config object with environment-specific overrides applied.
+        """
+        hetzner_config = self.hetzner.model_copy(deep=True)
+        if env in hetzner_config.envs:
+            env_settings = hetzner_config.envs[env]
+            if env_settings.vlan_id is not None:
+                hetzner_config.vlan_id = env_settings.vlan_id
+        return hetzner_config
 
 
 def config(path: str | None = None, reload: bool = False) -> Config:

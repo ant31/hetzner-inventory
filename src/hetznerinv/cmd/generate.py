@@ -83,12 +83,13 @@ def _gen_robot_inv(
     env: str,
     process_all: bool,
     requested: bool,
+    verbose: bool,
 ) -> None:
     """Generate Robot inventory if applicable"""
     if env == "production":
         if robot_client:
             typer.echo("Generating Robot inventory...")
-            gen_robot(robot_client, conf, hosts, env, process_all_hosts=process_all)
+            gen_robot(robot_client, conf, hosts, env, process_all_hosts=process_all, verbose=verbose)
             typer.secho("Robot inventory generation complete.", fg=typer.colors.GREEN)
         else:
             typer.secho(
@@ -145,6 +146,14 @@ def generate_main(
             help="Environment to generate inventory for (e.g., production, staging).",
         ),
     ] = "production",
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose",
+            "-v",
+            help="Show all servers found and their assigned environments before filtering.",
+        ),
+    ] = False,
     generate_robot: Annotated[
         bool,
         typer.Option(
@@ -182,7 +191,8 @@ def generate_main(
         return
 
     conf = config(path=str(config_path) if config_path else None)
-    
+    hetzner_conf = conf.hetzner_for_env(env)
+
     robot_client = _init_robot(conf, env)
     token = _get_cloud_token(conf, env)
 
@@ -198,14 +208,14 @@ def generate_main(
 
     # Generate inventories
     if gen_all or generate_robot:
-        _gen_robot_inv(robot_client, conf.hetzner, hosts_r, env, process_all_hosts, generate_robot)
+        _gen_robot_inv(robot_client, hetzner_conf, hosts_r, env, process_all_hosts, generate_robot, verbose)
 
     if gen_all or generate_cloud:
-        _gen_cloud_inv(hosts_c, token, conf.hetzner, env, process_all_hosts)
+        _gen_cloud_inv(hosts_c, token, hetzner_conf, env, process_all_hosts)
 
     # Generate SSH config
     if gen_all or generate_ssh:
-        _gen_ssh_cfg(env, conf.hetzner)
+        _gen_ssh_cfg(env, hetzner_conf)
     elif specific_gen:
         typer.echo("Skipping SSH configuration: --gen-ssh was not specified.")
 
