@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 import yaml
@@ -48,6 +48,56 @@ def _load_inv(path: Path, inv_type: str) -> dict:
             err=True,
         )
         raise typer.Exit(code=1) from e
+
+
+def _sync_server(server: Any, host_data: dict, update_names: bool, update_labels: bool, dry_run: bool) -> dict:
+    """Processes a single server for synchronization and returns row data for the table."""
+    name_before = server.name
+    labels_before = server.labels
+
+    name_after = name_before
+    labels_after = labels_before
+
+    changes = []
+    update_args = {}
+    if update_names:
+        inventory_name = host_data.get("name")
+        if inventory_name and server.name != inventory_name:
+            changes.append("Name")
+            name_after = inventory_name
+            update_args["name"] = inventory_name
+
+    if update_labels:
+        inventory_labels = host_data.get("server_info", {}).get("labels", {})
+        if server.labels != inventory_labels:
+            changes.append("Labels")
+            labels_after = inventory_labels
+            update_args["labels"] = inventory_labels
+
+    status = "No changes"
+    if update_args:
+        if dry_run:
+            status = "[yellow]Dry Run[/yellow]"
+        else:
+            try:
+                server.update(**update_args)
+                status = "[green]Success[/green]"
+            except Exception as e:
+                status = f"[red]Error: {e}[/red]"
+                name_after = name_before
+                labels_after = labels_before
+
+    labels_before_str = ", ".join([f"{k}={v}" for k, v in labels_before.items()])
+    labels_after_str = ", ".join([f"{k}={v}" for k, v in labels_after.items()])
+
+    return {
+        "name_before": name_before,
+        "name_after": name_after,
+        "labels_before_str": labels_before_str,
+        "labels_after_str": labels_after_str,
+        "changes_str": ", ".join(changes) if changes else "None",
+        "status": status,
+    }
 
 
 cmd_sync_app = typer.Typer(
@@ -156,53 +206,17 @@ def sync_main(
             )
             continue
 
-        name_before = server.name
-        labels_before = server.labels
-
-        name_after = name_before
-        labels_after = labels_before
-
-        changes = []
-        update_args = {}
-        if update_names:
-            inventory_name = host_data.get("name")
-            if inventory_name and server.name != inventory_name:
-                changes.append("Name")
-                name_after = inventory_name
-                update_args["name"] = inventory_name
-
-        if update_labels:
-            inventory_labels = host_data.get("server_info", {}).get("labels", {})
-            if server.labels != inventory_labels:
-                changes.append("Labels")
-                labels_after = inventory_labels
-                update_args["labels"] = inventory_labels
-
-        status = "No changes"
-        if update_args:
-            if dry_run:
-                status = "[yellow]Dry Run[/yellow]"
-            else:
-                try:
-                    server.update(**update_args)
-                    status = "[green]Success[/green]"
-                except Exception as e:
-                    status = f"[red]Error: {e}[/red]"
-                    name_after = name_before
-                    labels_after = labels_before
-
-        labels_before_str = ", ".join([f"{k}={v}" for k, v in labels_before.items()])
-        labels_after_str = ", ".join([f"{k}={v}" for k, v in labels_after.items()])
+        row_data = _sync_server(server, host_data, update_names, update_labels, dry_run)
 
         table.add_row(
             str(server_id),
             host_name,
-            name_before,
-            name_after,
-            labels_before_str,
-            labels_after_str,
-            ", ".join(changes) if changes else "None",
-            status,
+            row_data["name_before"],
+            row_data["name_after"],
+            row_data["labels_before_str"],
+            row_data["labels_after_str"],
+            row_data["changes_str"],
+            row_data["status"],
         )
 
     live.stop()
