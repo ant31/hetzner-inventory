@@ -138,7 +138,8 @@ def sync_main(
         server = servers_by_id.get(server_id)
         if not server:
             live.console.print(
-                f"[yellow]Warning: Server with ID {server_id} ({host_name}) not found in Hetzner Cloud. Skipping.[/yellow]"
+                f"[yellow]Warning: Server with ID {server_id} ({host_name}) not found in Hetzner Cloud. "
+                "Skipping.[/yellow]"
             )
             continue
 
