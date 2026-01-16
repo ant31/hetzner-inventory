@@ -76,8 +76,7 @@ class RobotEnvAssignment(BaseConfig):
     by_server_name_regex: dict[str, str] = Field(
         default_factory=dict,
         description=(
-            "Assign environment by server name regex (e.g. {'^staging-': 'staging'}). "
-            "Processed in definition order."
+            "Assign environment by server name regex (e.g. {'^staging-': 'staging'}). Processed in definition order."
         ),
     )
 
@@ -178,9 +177,7 @@ class HetznerInventoryConfig(BaseConfig):
         ),
     )
 
-    @field_validator(
-        "product_options", "cluster_subnets", "cloud_instance_names", "envs", mode="before"
-    )
+    @field_validator("product_options", "cluster_subnets", "cloud_instance_names", "envs", mode="before")
     @classmethod
     def _coerce_dict_keys_to_str(cls, v: Any) -> Any:
         if isinstance(v, dict):

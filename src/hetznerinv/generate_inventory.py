@@ -18,9 +18,7 @@ def hosts_by_id(hosts: list) -> dict:
     return hid
 
 
-def _get_servers_with_env(
-    robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool
-) -> dict:
+def _get_servers_with_env(robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool) -> dict:
     """Get all servers with their assigned environment."""
     servers_with_env = {}
 
@@ -89,7 +87,7 @@ def _get_product_info(server, hetzner_config: HetznerInventoryConfig) -> tuple[s
         options = hetzner_config.product_options[str(server.number)]
     elif product in hetzner_config.product_options:
         options = hetzner_config.product_options[product]
-    
+
     return product, options
 
 
@@ -154,7 +152,7 @@ def _create_host_entry(
     hostname = hetzner_config.hostname_format.format(
         name=name, group=group, dc=dc, domain_name=hetzner_config.domain_name
     )
-    
+
     return {
         "name": name,
         "ip": priv_ip,
@@ -191,13 +189,13 @@ def list_all_hosts(
 ):
     if hosts_init is None:
         hosts_init = {}
-    
+
     vlan_id = hetzner_config.vlan_id
     hosts = {}
     hids = hosts_by_id(list(hosts_init.values()))
     privips = {}
     vlanips = {}
-    
+
     all_servers_with_env = _get_servers_with_env(robot, hetzner_config, process_all_hosts)
 
     if verbose:
@@ -235,7 +233,7 @@ def list_all_hosts(
     table.add_column("Zone", justify="left")
     live = Live(table, refresh_per_second=4)
     live.start()
-    
+
     for i, number in enumerate(sorted(servers.keys())):
         server = servers[number]
         dc = server.datacenter.lower().replace("-", "")
@@ -256,10 +254,10 @@ def list_all_hosts(
         priv_ip, vlan_ip = _get_ip_addresses(
             server, name, dc, vlan_id, hetzner_config, hosts_init, privips, vlanips, force
         )
-        
+
         host = _create_host_entry(server, name, priv_ip, vlan_ip, product, options, hetzner_config)
         hosts[name] = host
-        
+
         table.add_row(
             str(i + 1),
             str(server.number),
@@ -435,30 +433,30 @@ def _prep_cloud_labels(
 ) -> dict:
     """Prepare labels for cloud server"""
     generated_labels = {"group": group}
-    
+
     if server.placement_group:
         generated_labels.update(server.placement_group.labels)
-    
+
     if name in k8s_groups:
         generated_labels.update(k8s_groups[name])
 
     final_labels = server.labels.copy()
     if hetzner_config.update_server_labels_in_cloud:
         final_labels.update(generated_labels)
-    
+
     return final_labels
 
 
 def _update_cloud_server(server, name: str, labels: dict, hetzner_config: HetznerInventoryConfig) -> None:
     """Update cloud server name and/or labels via API"""
     update_args = {}
-    
+
     if hetzner_config.update_server_names_in_cloud:
         update_args["name"] = name
-    
+
     if hetzner_config.update_server_labels_in_cloud:
         update_args["labels"] = labels
-    
+
     if update_args:
         server.update(**update_args)
 
@@ -479,7 +477,7 @@ def _create_cloud_host_entry(
     zone = server.datacenter.location.name.lower()
     dc = server.datacenter.name.lower().replace("-", "")
     group = f"{hetzner_config.cluster_prefix}{server.id % 4}"
-    
+
     hostname = hetzner_config.hostname_format.format(
         name=name, group=group, dc=dc, domain_name=hetzner_config.domain_name
     )
@@ -508,13 +506,13 @@ def _create_cloud_host_entry(
             },
         },
     }
-    
+
     if name in hosts_init and not force:
         if "ip" in hosts_init[name] and hosts_init[name]["ip"]:
             host["ip"] = hosts_init[name]["ip"]
         if "ip_vlan" in hosts_init[name] and hosts_init[name]["ip_vlan"]:
             host["ip_vlan"] = hosts_init[name]["ip_vlan"]
-    
+
     return host
 
 
@@ -530,7 +528,7 @@ def gen_cloud(
     hcloud_servers = client.servers.get_all()
     hosts = {}
     hids = hosts_by_id(list(hosts_init.values()))
-    
+
     servers = _filter_cloud_servers(hcloud_servers, hetzner_config, process_all_hosts)
     k8s_groups = prep_k8s()
 
@@ -559,25 +557,24 @@ def gen_cloud(
         region = server.datacenter.name[0:3].lower()
         dc = server.datacenter.name.lower().replace("-", "")
         group = f"{hetzner_config.cluster_prefix}{number % 4}"
-        
+
         name = _get_cloud_server_name(server, hids, product, hetzner_config, force)
-        
+
         priv_ip = server.private_net[0].ip if server.private_net else None
         ipv4 = server.public_net.ipv4.ip
 
         # Determine final name for inventory
         name_for_inventory = name if hetzner_config.update_server_names_in_cloud else server.name
-        
+
         # Prepare and update labels
         final_labels = _prep_cloud_labels(server, group, name, k8s_groups, hetzner_config)
         _update_cloud_server(server, name, final_labels, hetzner_config)
-        
+
         # Create host entry
         host = _create_cloud_host_entry(
-            server, name_for_inventory, priv_ip, ipv4, product, final_labels, 
-            hetzner_config, hosts_init, force
+            server, name_for_inventory, priv_ip, ipv4, product, final_labels, hetzner_config, hosts_init, force
         )
-        
+
         labels_str = ", ".join([f"{k}={v}" for k, v in final_labels.items()])
         table.add_row(
             str(i + 1),
@@ -591,7 +588,7 @@ def gen_cloud(
             f"[sea_green1]{region.upper()}[default] {dc}",
         )
         hosts[name_for_inventory] = host
-    
+
     inventory = ansible_hosts(hosts, "hetzner_cloud")
     live.stop()
     with open(f"inventory/{env}/cloud.yaml", "w") as f:
