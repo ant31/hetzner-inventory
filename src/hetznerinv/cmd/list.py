@@ -92,14 +92,26 @@ def list_main(
         hetzner_conf = conf.hetzner
         all_servers_with_env = get_robot_servers_with_env(robot_client, hetzner_conf, process_all_hosts=True)
 
-        table = Table(title="Hetzner Robot Servers")
+        table = Table(
+            title="Hetzner Robot Servers",
+            highlight=True,
+            title_justify="left",
+            title_style="bold magenta",
+            row_styles=["bold", "none"],
+        )
         table.add_column("ID")
         table.add_column("Name")
         table.add_column("Public IP")
         table.add_column("Product")
         table.add_column("Assigned Env")
         for server_number, (server, server_env) in sorted(all_servers_with_env.items()):
-            table.add_row(str(server_number), server.name, server.ip, server.product, server_env)
+            table.add_row(
+                str(server_number),
+                server.name,
+                f"[pale_turquoise1]{server.ip}",
+                server.product,
+                f"[sea_green1]{server_env}",
+            )
         print(table)
 
     # Cloud Servers
@@ -108,7 +120,13 @@ def list_main(
     hcloud_servers = client.servers.get_all()
 
     if hcloud_servers:
-        table = Table(title=f"Hetzner Cloud Servers ({env})")
+        table = Table(
+            title=f"Hetzner Cloud Servers ({env})",
+            highlight=True,
+            title_justify="left",
+            title_style="bold magenta",
+            row_styles=["bold", "none"],
+        )
         table.add_column("ID")
         table.add_column("Name")
         table.add_column("Public IP")
@@ -119,8 +137,8 @@ def list_main(
             table.add_row(
                 str(server.id),
                 server.name,
-                server.public_net.ipv4.ip,
+                f"[pale_turquoise1]{server.public_net.ipv4.ip}",
                 server.server_type.name,
-                labels_str,
+                f"[sky_blue1]{labels_str}",
             )
         print(table)
