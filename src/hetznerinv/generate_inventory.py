@@ -104,9 +104,13 @@ def _get_ip_addresses(
 ) -> tuple[str, str]:
     """Determine private and VLAN IP addresses for server"""
     last_ipvlan = hetzner_config.cluster_subnets[vlan_id].start
-    last_privip = hetzner_config.cluster_subnets[dc].start
+    dc_configured = dc in hetzner_config.cluster_subnets
 
-    if hetzner_config.cluster_subnets[dc].privlink and name not in hetzner_config.no_privlink_hostnames:
+    if (
+        dc_configured
+        and hetzner_config.cluster_subnets[dc].privlink
+        and name not in hetzner_config.no_privlink_hostnames
+    ):
         priv_ip = hetzner_config.cluster_subnets[dc].start
     else:
         priv_ip = last_ipvlan
@@ -121,11 +125,15 @@ def _get_ip_addresses(
     vlanips[last_ipvlan] = True
 
     # Update subnet starts
-    hetzner_config.cluster_subnets[dc].start = str(IPv4Address(last_privip) + 1)
-    hetzner_config.cluster_subnets[vlan_id].start = str(IPv4Address(last_ipvlan) + 1)
+    if dc_configured:
+        last_privip = hetzner_config.cluster_subnets[dc].start
+        hetzner_config.cluster_subnets[dc].start = str(IPv4Address(last_privip) + 1)
+        while hetzner_config.cluster_subnets[dc].start in privips:
+            hetzner_config.cluster_subnets[dc].start = str(
+                IPv4Address(hetzner_config.cluster_subnets[dc].start) + 1
+            )
 
-    while hetzner_config.cluster_subnets[dc].start in privips:
-        hetzner_config.cluster_subnets[dc].start = str(IPv4Address(hetzner_config.cluster_subnets[dc].start) + 1)
+    hetzner_config.cluster_subnets[vlan_id].start = str(IPv4Address(last_ipvlan) + 1)
 
     while hetzner_config.cluster_subnets[vlan_id].start in vlanips:
         current_ip = hetzner_config.cluster_subnets[vlan_id].start
@@ -240,9 +248,6 @@ def list_all_hosts(
         region = server.datacenter[0:3].lower()
 
         # Validate datacenter config
-        if dc not in hetzner_config.cluster_subnets:
-            live.console.print(f"Warning: DC '{dc}' not in cluster_subnets config. Skipping server {server.number}.")
-            continue
         if vlan_id not in hetzner_config.cluster_subnets:
             live.console.print(
                 f"Warning: VLAN ID '{vlan_id}' not in cluster_subnets config. Skipping server {server.number}."
