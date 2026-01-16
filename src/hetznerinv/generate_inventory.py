@@ -26,7 +26,7 @@ def _get_ssh_user(server_id: str | int, hetzner_config: HetznerInventoryConfig) 
     return hetzner_config.ssh_user
 
 
-def _get_servers_with_env(robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool) -> dict:
+def get_robot_servers_with_env(robot: Robot, hetzner_config: HetznerInventoryConfig, process_all_hosts: bool) -> dict:
     """Get all servers with their assigned environment."""
     servers_with_env = {}
 
@@ -214,7 +214,7 @@ def list_all_hosts(
     privips = {}
     vlanips = {}
 
-    all_servers_with_env = _get_servers_with_env(robot, hetzner_config, process_all_hosts)
+    all_servers_with_env = get_robot_servers_with_env(robot, hetzner_config, process_all_hosts)
 
     if verbose:
         verbose_table = Table(

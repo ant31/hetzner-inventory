@@ -93,12 +93,22 @@ def sync_main(
             help="Sync server labels from inventory to Hetzner Cloud.",
         ),
     ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Perform a dry run without making any changes to Hetzner Cloud.",
+        ),
+    ] = False,
 ):
     """
     Syncs inventory data like server names and labels to Hetzner Cloud.
     """
     if ctx.invoked_subcommand is not None:
         return
+
+    if dry_run:
+        typer.secho("Performing a dry run. No changes will be applied.", fg=typer.colors.YELLOW)
 
     if not update_names and not update_labels:
         typer.secho("Error: At least one of --names or --labels must be specified.", fg=typer.colors.RED, err=True)
@@ -123,8 +133,11 @@ def sync_main(
     )
     table.add_column("ID", justify="left")
     table.add_column("Inventory Name", justify="left")
-    table.add_column("Cloud Name", justify="left")
-    table.add_column("Action", justify="left")
+    table.add_column("Cloud Name (Before)", justify="left")
+    table.add_column("Cloud Name (After)", justify="left")
+    table.add_column("Labels (Before)", justify="left")
+    table.add_column("Labels (After)", justify="left")
+    table.add_column("Changes", justify="left")
     table.add_column("Status", justify="left")
 
     live = Live(table, refresh_per_second=4)
@@ -143,40 +156,58 @@ def sync_main(
             )
             continue
 
-        actions = []
+        name_before = server.name
+        labels_before = server.labels
+
+        name_after = name_before
+        labels_after = labels_before
+
+        changes = []
+        update_args = {}
+        if update_names:
+            inventory_name = host_data.get("name")
+            if inventory_name and server.name != inventory_name:
+                changes.append("Name")
+                name_after = inventory_name
+                update_args["name"] = inventory_name
+
+        if update_labels:
+            inventory_labels = host_data.get("server_info", {}).get("labels", {})
+            if server.labels != inventory_labels:
+                changes.append("Labels")
+                labels_after = inventory_labels
+                update_args["labels"] = inventory_labels
+
         status = "No changes"
+        if update_args:
+            if dry_run:
+                status = "[yellow]Dry Run[/yellow]"
+            else:
+                try:
+                    server.update(**update_args)
+                    status = "[green]Success[/green]"
+                except Exception as e:
+                    status = f"[red]Error: {e}[/red]"
+                    name_after = name_before
+                    labels_after = labels_before
 
-        try:
-            update_args = {}
-            # Sync names
-            if update_names:
-                inventory_name = host_data.get("name")
-                if inventory_name and server.name != inventory_name:
-                    actions.append(f"Name: '{server.name}' -> '{inventory_name}'")
-                    update_args["name"] = inventory_name
-
-            # Sync labels
-            if update_labels:
-                inventory_labels = host_data.get("server_info", {}).get("labels", {})
-                if server.labels != inventory_labels:
-                    actions.append("Labels updated")
-                    update_args["labels"] = inventory_labels
-
-            if update_args:
-                server.update(**update_args)
-                status = "[green]Success[/green]"
-
-        except Exception as e:
-            status = f"[red]Error: {e}[/red]"
+        labels_before_str = ", ".join([f"{k}={v}" for k, v in labels_before.items()])
+        labels_after_str = ", ".join([f"{k}={v}" for k, v in labels_after.items()])
 
         table.add_row(
             str(server_id),
             host_name,
-            server.name,
-            ", ".join(actions) if actions else "None",
+            name_before,
+            name_after,
+            labels_before_str,
+            labels_after_str,
+            ", ".join(changes) if changes else "None",
             status,
         )
 
     live.stop()
 
-    typer.secho("Sync process finished.", fg=typer.colors.BRIGHT_GREEN)
+    if dry_run:
+        typer.secho("Dry run finished. No changes were made.", fg=typer.colors.BRIGHT_GREEN)
+    else:
+        typer.secho("Sync process finished.", fg=typer.colors.BRIGHT_GREEN)
