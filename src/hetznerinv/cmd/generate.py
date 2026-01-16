@@ -85,19 +85,15 @@ def _gen_robot_inv(
     verbose: bool,
 ) -> None:
     """Generate Robot inventory if applicable"""
-    if env == "production":
-        if robot_client:
-            typer.echo("Generating Robot inventory...")
-            gen_robot(robot_client, conf, hosts, env, process_all_hosts=process_all, verbose=verbose)
-            typer.secho("Robot inventory generation complete.", fg=typer.colors.GREEN)
-        else:
-            typer.secho(
-                "Skipping Robot inventory generation: creds not configured or client failed for production.",
-                fg=typer.colors.YELLOW,
-            )
+    if robot_client:
+        typer.echo("Generating Robot inventory...")
+        gen_robot(robot_client, conf, hosts, env, process_all_hosts=process_all, verbose=verbose)
+        typer.secho("Robot inventory generation complete.", fg=typer.colors.GREEN)
     elif requested:
+        # This case is when --gen-robot is specified for an env without credentials.
+        # _init_robot already prints a warning. This adds context.
         typer.secho(
-            "Skipping Robot inventory generation: Robot inventory is typically only for 'production' environment.",
+            "Skipping Robot inventory generation: Robot credentials not configured for this environment.",
             fg=typer.colors.YELLOW,
         )
 
