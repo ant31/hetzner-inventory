@@ -1,0 +1,7 @@
+[tools]
+node = "latest"
+python = { version = "3.14", virtualenv = ".venv"}
+uv = 'latest'
+
+[env]
+_.python.venv = { path = ".venv", create = true, uv_create_args = ['--seed']}

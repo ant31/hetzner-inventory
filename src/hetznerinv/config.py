@@ -63,9 +63,31 @@ class SubnetDetail(BaseConfig):
     privlink: bool | None = Field(default=None, description="Indicates if privlink is used for this subnet.")
 
 
+class RobotEnvAssignment(BaseConfig):
+    """Configuration for assigning Robot servers to environments."""
+
+    default: str = Field(default="production", description="Default environment for servers not otherwise matched.")
+    by_vswitch: dict[str, str] = Field(
+        default_factory=dict, description="Assign environment by vswitch ID (e.g. {'1234': 'staging'})."
+    )
+    by_server_id: dict[str, str] = Field(
+        default_factory=dict, description="Assign environment by server ID (e.g. {'1234567': 'staging'})."
+    )
+    by_server_name_regex: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Assign environment by server name regex (e.g. {'^staging-': 'staging'}). "
+            "Processed in definition order."
+        ),
+    )
+
+
 class HetznerInventoryConfig(BaseConfig):
     """Configuration specific to Hetzner inventory generation."""
 
+    robot_env_assignment: RobotEnvAssignment = Field(
+        default_factory=RobotEnvAssignment, description="Rules for assigning Robot servers to environments."
+    )
     ssh_fingerprints: list[str] = Field(
         default_factory=list, description="List of SSH key fingerprints for server setup."
     )

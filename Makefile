@@ -1,15 +1,8 @@
-.PHONY: format format-test check fix clean clean-build clean-pyc clean-test coverage install pylint pylint-quick pyre test publish poetry-check publish isort isort-check docker-push docker-build migrate lint
+.PHONY: black black-test check clean clean-build clean-pyc clean-test coverage install pylint pylint-quick pyre test publish uv-check publish isort isort-check docker-push
 
-APP_ENV ?= dev
+
 VERSION := `cat VERSION`
-package := hetznerinv
-NAMESPACE := hetznerinv
-
-DOCKER_BUILD_ARGS ?= "-q"
-
-all: fix
-
-.PHONY: clear-test-db create-cache-db clean-db .check-clear
+package := "src/hetznerinv"
 
 help:
 	@echo "clean - remove all build, test, coverage and Python artifacts"
@@ -24,21 +17,23 @@ help:
 	@echo "release - package and upload a release"
 	@echo "dist - package"
 	@echo "install - install the package to the active Python's site-packages"
-	@echo "migrate - Execute a db migration"
 
 clean: clean-build clean-pyc clean-test
 
 clean-build:
-	rm -rf build/ dist/ .eggs/
-	find . \( -path "./.venv" -o -path "./.cache" \) -prune -o \
-	       \( -name '*.egg-info' -o -name '*.egg' \) -exec rm -rf {} +
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+	find . -name '*.egg-info' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -f {} +
 
 clean-pyc:
-	rm -f pyrightconfig.json
-	find . \( -path "./.venv" -o -path "./.cache" \) -prune -o \
-	       \( -name '*.pyc' -o -name '*.pyo' -o -name '*~' -o -name 'flycheck_*' \) -exec rm -f {} +
-	find . \( -path "./.venv" -o -path "./.cache" \) -prune -o \
-	       \( -name '__pycache__' -o -name '.mypy_cache' -o -name '.pyre' \) -exec rm -rf {} +
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
+	find . -name '.mypy_cache' -exec rm -fr {} +
+	find . -name '.pyre' -exec rm -fr {} +
 
 clean-test:
 	rm -fr .tox/
@@ -48,92 +43,83 @@ clean-test:
 	rm -f report.xml
 
 test:
-	HETZNERINV_CONFIG=tests/data/test_config.yaml poetry run py.test --cov=$(package) --verbose tests --cov-report=html --cov-report=term --cov-report xml:coverage.xml --cov-report=term-missing --junitxml=report.xml --asyncio-mode=auto
+	uv run py.test --cov=$(package) --verbose tests --cov-report=html --cov-report=term --cov-report xml:coverage.xml --cov-report=term-missing --junitxml=report.xml --asyncio-mode=auto
 
 coverage:
-	poetry run coverage run --source $(package) setup.py test
-	poetry run coverage report -m
-	poetry run coverage html
+	uv run coverage run --source $(package) setup.py test
+	uv run coverage report -m
+	uv run coverage html
 	$(BROWSER) htmlcov/index.html
 
 install: clean
-	poetry install
+	uv install
 
 pylint-quick:
-	poetry run pylint --rcfile=.pylintrc $(package)  -E -r y
+	uv run pylint --rcfile=.pylintrc $(package)  -E -r y
 
 pylint:
-	poetry run pylint --rcfile=".pylintrc" $(package)
-
-pyright:
-	poetry run pyright
-
-lint: format-test isort-check ruff poetry-check
-small-check: format-test isort-check poetry-check
-check: lint pyright
-
-pyre: pyre-check
-
-pyre-check:
-	poetry run pyre --noninteractive check 2>/dev/null
+	uv run pylint --rcfile=".pylintrc" $(package)
 
 format:
-	poetry run ruff format $(package)
+	uv run ruff format $(package)
 
 format-test:
-	poetry run ruff format $(package) --check
+	uv run ruff format $(package) --check
 
-poetry-check:
-	poetry check --lock
+pyre:
+	uv run pyre
 
-publish: clean
-	poetry build
-	poetry publish
-
-isort:
-	poetry run isort .
-	poetry run ruff check --select I $(package) tests --fix
-
-isort-check:
-	poetry run ruff check --select I $(package) tests
-	poetry run isort --diff --check .
+pyre-check:
+	uv run pyre --noninteractive check 2>/dev/null
 
 ruff:
-	poetry run ruff check
+	uv run ruff check --fix
+
+ruff-check:
+	uv run ruff check
+
+uv-check:
+	uv lock --locked --offline
+
+publish: clean
+	uv build
+	uv publish
+
+isort:
+	uv run isort .
+	uv run ruff check --select I $(package) tests --fix
+
+isort-check:
+	uv run ruff check --select I $(package) tests
+	uv run isort --diff --check .
+
+pyright:
+	uv run pyright
+
+lint: format-test isort-check ruff uv-check
+
+check: lint # pyright
 
 fix: format isort
-	poetry run ruff check --fix
+	uv run ruff check --fix
 
 .ONESHELL:
 pyrightconfig:
 	jq \
       --null-input \
-      --arg venv "$$(basename $$(poetry env info -p))" \
-      --arg venvPath "$$(dirname $$(poetry env info -p))" \
+      --arg venv "$$(basename $$(uv env info -p))" \
+      --arg venvPath "$$(dirname $$(uv env info -p))" \
       '{ "venv": $$venv, "venvPath": $$venvPath }' \
       > pyrightconfig.json
 
-rename:
-	ack hetznerinv -l | xargs -i{} sed -r -i "s/hetznerinv/hetznerinv/g" {}
-	ack Hetznerinv -i -l | xargs -i{} sed -r -i "s/Hetznerinv/Hetznerinv/g" {}
-	ack HETZNERINV -i -l | xargs -i{} sed -r -i "s/HETZNERINV/HETZNERINV/g" {}
+upgrade-dep:
+	uv sync --upgrade
+	uv lock -U --resolution=highest
 
-ipython:
-	poetry run ipython
-
-
-CONTAINER_REGISTRY=ghcr.io/ant31/hetznerinv
-
-
-docker-push-local: docker-build-locall
-    docker push $(CONTAINER_REGISTRY):latest
-
-docker-build-local:
-    docker build --network=host -t $(CONTAINER_REGISTRY):latest .
-
-docker-push:
-	docker buildx build --push -t $(CONTAINER_REGISTRY):latest .
+.PHONY: docs
+docs:
+	uv run mkdocs serve
 
 BUMP ?= patch
 bump:
-	poetry run bump-my-version bump $(BUMP)
+	uv run bump-my-version bump $(BUMP)

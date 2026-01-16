@@ -1,13 +1,13 @@
 src = [
-    "hetznerinv"
-
+    "funnelboat",
+    "tests"
 ]
 
 line-length = 120
 indent-width = 4
 
 # Assume Python 3.8
-target-version = "py312"
+target-version = "py313"
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
@@ -436,7 +436,6 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 [lint]
 select = [
-# "ALL"
     # pycodestyle
     "E",
     # Pyflakes
@@ -449,8 +448,14 @@ select = [
     "SIM",
     # isort
     "I",
+    # pylint
     "PL",
-    "RUF"
+    # FASTAPI
+    "FAST",
+    # Ruff-specific rules
+    "RUF",
+    # flake8-comprehensions
+    "C4",
 
 ]
 ignore = [
@@ -474,8 +479,27 @@ ignore = [
 
 fixable = ["ALL"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-exclude = []
+exclude = [
+"**/gen/*.py",
+"tests/*.py"]
 [analyze]
 detect-string-imports = true
 [lint.isort]
-known-first-party = ["hetznerinv"]
+known-first-party = ["funnelboat"]
+
+[lint.per-file-ignores]
+"**/temporal/**/*.py" = ["PLC0415"]  # Allow local import for deterministic temporal check
+"tests/**/*.py" = ["PLR2004", "PLC0415"]  # Allow magic numbers and imports outside toplevel in tests
+"test_*.py" = ["PLR2004", "PLC0415"]  # Allow magic numbers and imports outside toplevel in tests
+"**/gen/*" = ["E501"]
+"**/prompt.py" = ["E501", "RUF001"]
+
+# Complexity limits - set high but enforce maintainability
+[lint.pylint]
+max-statements = 75  # Limit statements per function (high but not unlimited)
+max-branches = 15  # Limit branches per function
+max-returns = 8  # Limit return statements
+max-locals = 20  # Limit local variables
+max-public-methods = 25  # Limit public methods per class
+max-bool-expr = 6  # Limit boolean expressions in conditions
+max-nested-blocks = 6  # Limit nesting depth

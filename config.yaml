@@ -1,0 +1,35 @@
+# Minimal configuration file for hetznerinv
+# This file can be empty or contain overrides for default values
+{}
+
+# Uncomment and configure as needed:
+# hetzner_credentials:
+#   robot_user: "your_robot_user"
+#   robot_password: "your_robot_password"
+#   hcloud_token: "your_default_hcloud_token"
+#   hcloud_tokens:
+#     production: "your_production_token"
+#     staging: "your_staging_token"
+
+# hetzner:
+#   cluster_prefix: "z"
+#   domain_name: "example.com"
+#   vlan_id: 4000
+#   robot_env_assignment:
+#     # 1. Default environment for any server that doesn't match other rules.
+#     default: "production"
+#
+#     # 2. Assign servers to 'staging' if they are connected to vSwitch with ID 4567.
+#     # This is a broad rule that can be overridden by more specific rules.
+#     by_vswitch:
+#       '4567': "staging"
+#
+#     # 3. Assign servers based on name patterns. This is more specific than by_vswitch.
+#     # For example, a server named 'dev-web-01' on vSwitch 4567 would be assigned to 'development'.
+#     by_server_name_regex:
+#       '^dev-': "development"
+#
+#     # 4. Assign specific servers by their ID. This has the highest precedence and overrides all other rules.
+#     # For example, server 1234567 will be 'production-db' even if it's on vSwitch 4567 and named 'dev-db-01'.
+#     by_server_id:
+#       '1234567': "production-db"

@@ -1,13 +1,12 @@
 import os
-import ssl
 import socket
-
-from tempfile import NamedTemporaryFile
+import ssl
 from http.client import HTTPSConnection
+from tempfile import NamedTemporaryFile
 
 
 class ValidatedHTTPSConnection(HTTPSConnection):
-    CA_ROOT_CERT_FALLBACK = '''
+    CA_ROOT_CERT_FALLBACK = """
         DigiCert Global Root G2
         -----BEGIN CERTIFICATE-----
         MIIDjjCCAnagAwIBAgIQAzrx5qcRqaC7KGSxHQn65TANBgkqhkiG9w0BAQsFADBh
@@ -31,10 +30,10 @@ class ValidatedHTTPSConnection(HTTPSConnection):
         pLiaWN0bfVKfjllDiIGknibVb63dDcY3fe0Dkhvld1927jyNxF1WW6LZZm6zNTfl
         MrY=
         -----END CERTIFICATE-----
-    '''
+    """
 
     def get_ca_cert_bundle(self):
-        via_env = os.getenv('SSL_CERT_FILE')
+        via_env = os.getenv("SSL_CERT_FILE")
         if via_env is not None and os.path.exists(via_env):
             return via_env
         probe_paths = [
@@ -49,17 +48,14 @@ class ValidatedHTTPSConnection(HTTPSConnection):
 
     def connect(self):
         context = ssl.create_default_context()
-        with socket.create_connection((self.host, self.port), timeout=self.timeout, source_address=self.source_address) as sock:
-
-          bundle = cafile = self.get_ca_cert_bundle()
-          if bundle is None:
-              ca_certs = NamedTemporaryFile()
-              ca_certs.write('\n'.join(
-                  map(str.strip, self.CA_ROOT_CERT_FALLBACK.splitlines())
-              ).encode('ascii'))
-              ca_certs.flush()
-              cafile = ca_certs.name
-          self.sock = context.wrap_socket(sock, server_hostname=self.host, do_handshake_on_connect=True)
-
-          if bundle is None:
-              ca_certs.close()
+        with socket.create_connection(
+            (self.host, self.port), timeout=self.timeout, source_address=self.source_address
+        ) as sock:
+            bundle = self.get_ca_cert_bundle()
+            if bundle is None:
+                with NamedTemporaryFile() as ca_certs:
+                    ca_certs.write("\n".join(map(str.strip, self.CA_ROOT_CERT_FALLBACK.splitlines())).encode("ascii"))
+                    ca_certs.flush()
+                    self.sock = context.wrap_socket(sock, server_hostname=self.host, do_handshake_on_connect=True)
+            else:
+                self.sock = context.wrap_socket(sock, server_hostname=self.host, do_handshake_on_connect=True)
