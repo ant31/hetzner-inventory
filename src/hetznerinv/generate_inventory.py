@@ -76,7 +76,7 @@ def get_robot_servers_with_env(robot: Robot, hetzner_config: HetznerInventoryCon
 def _get_server_name(server, hids: dict, product: str, options: str) -> str:
     """Get server name from existing hosts or generate new one"""
     if server.number in hids:
-        return hids[server.number]["name"]
+        return hids[server.number]["node_name"]
     return f"{server.number}-{product}{options}"
 
 
@@ -171,7 +171,7 @@ def _create_host_entry(
     ssh_user = _get_ssh_user(server.number, hetzner_config)
 
     return {
-        "name": name,
+        "node_name": name,
         "ip": priv_ip,
         "ip_vlan": vlan_ip,
         "ansible_ssh_host": server.ip,
@@ -342,8 +342,8 @@ def _ssh_config(servers: dict, hetzner_config: HetznerInventoryConfig, name: str
     with Live(table, refresh_per_second=4):
         row_num = 0
         for k, s in servers.items():
-            names = [s["name"]]
-            if k != s["name"]:
+            names = [s["node_name"]]
+            if k != s["node_name"]:
                 names.append(k)
             for hostname_alias in names:
                 row_num += 1
@@ -435,7 +435,7 @@ def _get_cloud_server_name(
     """Determine cloud server name from config or existing hosts"""
     name = hetzner_config.cloud_instance_names.get(str(server.id), f"{server.id}-{product}")
     if server.id in hids and not force:
-        name = hids[server.id]["name"]
+        name = hids[server.id]["node_name"]
     return name
 
 
@@ -500,7 +500,7 @@ def _create_cloud_host_entry(
     ssh_user = _get_ssh_user(server.id, hetzner_config)
 
     host = {
-        "name": name,
+        "node_name": name,
         "ip": priv_ip,
         "ip_vlan": priv_ip,
         "ansible_ssh_host": ipv4,

@@ -61,7 +61,7 @@ def _sync_server(server: Any, host_data: dict, update_names: bool, update_labels
     changes = []
     update_args = {}
     if update_names:
-        inventory_name = host_data.get("name")
+        inventory_name = host_data.get("node_name")
         if inventory_name and server.name != inventory_name:
             changes.append("Name")
             name_after = inventory_name
